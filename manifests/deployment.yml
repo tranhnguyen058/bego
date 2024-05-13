@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: tranhnguyenbego 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tranhnguyenbego
+  template:
+    metadata:
+      labels:
+        app: tranhnguyenbego 
+    spec:
+      containers:
+        - name: tranhnguyenbego 
+          image: testrgt.azurecr.io/tranhnguyenbego
+          ports:
+          - containerPort: 8080
