@@ -8,8 +8,6 @@ trigger:
 
 pool:
   name: 'test'
-  demands:
-    -  agent.name -equals "aks-agentpool-38387254-vmss000004"
 
 steps:
 - script: echo Hello, world!
