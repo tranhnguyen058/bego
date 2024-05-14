@@ -135,7 +135,7 @@ func (us *UserService) GetAssignTasks(userId string) ([]model.Task, error) {
 }
 
 const (
-	emailAddr = "boynhabecp@gmail.com"
+	emailAddr = "trunganh1100@gmail.com"
 	emialPass = "okqq ifeb wwza izau"
 )
 

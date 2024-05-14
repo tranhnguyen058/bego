@@ -4,7 +4,7 @@ type User struct {
 	UserId       string `json:"user_id" bson:"user_id"`
 	Email        string `json:"email" bson:"email"`
 	Lock         bool   `json:"lock" bson:"lock"`
-	UserName     string `json:"full_name" bson:"full_name"`
+	UserName     string `json:"username" bson:"username"`
 	Avatar       []byte `json:"avatar" bson:"avatar"`
 	Pass         string `json:"pass" bson:"password"`
 	Try          int    `json:"try" bson:"try"`

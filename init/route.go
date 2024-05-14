@@ -30,42 +30,42 @@ func NewRouter(e *echo.Echo, tc controller.TaskController, uc controller.UserCon
 	e.POST("/user/login", func(c echo.Context) error {
 		return uc.Login(c)
 	})
-	// e.GET("/task/all", func(c echo.Context) error {
-	// 	return tc.GetAll(c)
-	// })
-	// e.GET("/task/:id", func(c echo.Context) error {
-	// 	return tc.Detail(c)
-	// })
-	// e.GET("/task/list-task/:userId", func(c echo.Context) error {
-	// 	return tc.GetList(c)
-	// })
-	// e.POST("/task", func(c echo.Context) error {
-	// 	return tc.Create(c)
-	// })
-	// e.PUT("/task", func(c echo.Context) error {
-	// 	return tc.Update(c)
-	// })
-	// e.DELETE("/task/:id", func(c echo.Context) error {
-	// 	return tc.Delete(c)
-	// })
+	e.GET("/task/all", func(c echo.Context) error {
+		return tc.GetAll(c)
+	})
+	e.GET("/task/:id", func(c echo.Context) error {
+		return tc.Detail(c)
+	})
+	e.GET("/task/list-task/:userId", func(c echo.Context) error {
+		return tc.GetList(c)
+	})
+	e.POST("/task", func(c echo.Context) error {
+		return tc.Create(c)
+	})
+	e.PUT("/task", func(c echo.Context) error {
+		return tc.Update(c)
+	})
+	e.DELETE("/task/:id", func(c echo.Context) error {
+		return tc.Delete(c)
+	})
 	e.POST("/user", func(c echo.Context) error {
 		return uc.Create(c)
 	})
 	e.POST("/user/update", func(c echo.Context) error {
 		return uc.Update(c)
 	})
-	// e.GET("/user/get-list", func(c echo.Context) error {
-	// 	return uc.GetList(c)
-	// })
+	e.GET("/user/get-list", func(c echo.Context) error {
+		return uc.GetList(c)
+	})
 	// e.POST("/word", func(c echo.Context) error {
 	// 	return wc.Insert(c)
 	// })
 	// e.GET("/word/question/:level", func(c echo.Context) error {
 	// 	return wc.GetQuestions(c)
 	// })
-	// e.POST("/task/assign-to", func(c echo.Context) error {
-	// 	return uc.GetAssignTask(c)
-	// })
+	e.POST("/task/assign-to", func(c echo.Context) error {
+		return uc.GetAssignTask(c)
+	})
 	e.POST("/user/lock", func(c echo.Context) error {
 		return uc.Lock(c)
 	})
