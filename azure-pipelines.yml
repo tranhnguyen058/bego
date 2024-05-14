@@ -14,7 +14,7 @@ variables:
   dockerRegistryServiceConnection: 'b07b27c1-6354-4432-86c1-2eb399baf61d'
   imageRepository: 'tranhnguyenbego'
   containerRegistry: 'testrgt.azurecr.io'
-  dockerfilePath: 'Dockerfile'
+  dockerfilePath: '/'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'testrgt857894a3-auth'
 
