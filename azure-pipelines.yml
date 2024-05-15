@@ -29,7 +29,7 @@ stages:
   jobs:
   - job: Build
     displayName: Build
-    pool: pool-gcp
+    pool: pool-local
     steps:
     - task: Docker@2
       displayName: Build and push an image to container registry
@@ -52,7 +52,7 @@ stages:
   - deployment: Deploy
     condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')))
     displayName: Deploy
-    pool: pool-gcp
+    pool: pool-local
     environment: 'tranhnguyen058bego-6992.default'
     strategy:
       runOnce:
@@ -80,7 +80,7 @@ stages:
   - deployment: DeployPullRequest
     displayName: Deploy Pull request
     condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/pull/'))
-    pool: pool-gcp
+    pool: pool-local
 
     environment: 'tranhnguyen058bego-6992.$(k8sNamespaceForPR)'
     strategy:
