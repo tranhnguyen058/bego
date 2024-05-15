@@ -52,7 +52,7 @@ stages:
   - deployment: Deploy
     condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')))
     displayName: Deploy
-    pool: pool-l
+    pool: pool-local
     environment: 'tranhnguyen058bego-6992.default'
     strategy:
       runOnce:
