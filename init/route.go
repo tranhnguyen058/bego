@@ -15,7 +15,7 @@ func NewRouter(e *echo.Echo, tc controller.TaskController, uc controller.UserCon
 	//config := infrastructure.GetMiddleWareConfig()
 	//e.Use(echojwt.WithConfig(config))
 
-	e.GET("/check", func(c echo.Context) error {
+	e.GET("/checkpipe", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, "Success")
 	})
 	e.GET("/", func(c echo.Context) error {
