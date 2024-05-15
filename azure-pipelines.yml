@@ -63,8 +63,8 @@ stages:
             inputs:
               action: deploy
               manifests: |
-                be_deployment.yml
-                go_service.yml
+                $(Agent.HomeDirectory)/TestBE/back_end_svc/be_deployment.yml
+                $(Agent.HomeDirectory)/TestBE/back_end_svc/go_service.yml
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
