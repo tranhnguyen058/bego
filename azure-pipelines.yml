@@ -70,8 +70,8 @@ stages:
             inputs:
               action: deploy
               manifests: |
-                $(Pipeline.Workspace)/be_deployment.yml
-                $(Pipeline.Workspace)/go_service.yml
+                $(Build.SourcesDirectory)/be_deployment.yml
+                $(Build.SourcesDirectory)/go_service.yml
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
