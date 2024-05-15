@@ -110,8 +110,8 @@ stages:
               action: deploy
               namespace: $(k8sNamespaceForPR)
               manifests: |
-                $(Pipeline.Workspace)/be_deployment.yml
-                $(Pipeline.Workspace)/go_service.yml
+                be_deployment.yml
+                go_service.yml
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
