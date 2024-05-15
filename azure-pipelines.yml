@@ -7,7 +7,7 @@ trigger:
 - BeGO
 
 pool:
-  Azure Pipelines
+  pool-local
 
 variables:
   GOBIN:  '$(GOPATH)/bin' # Go binaries path
