@@ -19,7 +19,7 @@ func NewRouter(e *echo.Echo, tc controller.TaskController, uc controller.UserCon
 		return c.JSON(http.StatusOK, "Success Edit")
 	})
 	e.GET("/", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "Access go complete")
+		return c.JSON(http.StatusOK, "Edit")
 	})
 	e.POST("/reset", func(c echo.Context) error {
 		return uc.ResetPass(c)
