@@ -1,19 +1,22 @@
-apiVersion : apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tranhnguyenbego 
+  name: be-deploy
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
-      app: tranhnguyenbego
+      app: backend
   template:
     metadata:
       labels:
-        app: tranhnguyenbego 
+        app: backend
     spec:
       containers:
-        - name: tranhnguyenbego 
-          image: testrgt.azurecr.io/tranhnguyenbego
-          ports:
-          - containerPort: 8080
+      - name: backend
+        image: acrforaksanhnt315.azurecr.io/tranhnguyenbego
+        ports:
+        - containerPort: 8080
+        
+
+
