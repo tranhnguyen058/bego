@@ -51,7 +51,7 @@ stages:
       artifact: manifests
 
 - stage: Dev
-  displayName: Deploy Dev Stage
+  displayName: DEV
   dependsOn: Build
 
   jobs:
@@ -84,8 +84,8 @@ stages:
               containers: |
                 $(containerRegistry)/$(imageRepository):$(tag)
 
-- stage: 'Test'
-  displayName: 'Deploy to the test environment'
+- stage: Test
+  displayName: TEST 
   dependsOn: Dev
   #condition: eq(variables['Build.Reason'], 'Schedule')
   jobs:
@@ -117,8 +117,8 @@ stages:
                 containers: |
                   $(containerRegistry)/$(imageRepository):$(tag)
 
-- stage: 'Staging'
-  displayName: 'Deploy to the staging environment'
+- stage: Staging
+  displayName: Staging
   dependsOn: Test
   jobs:
     - deployment: Deploy
