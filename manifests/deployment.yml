@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: be-deploy
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: backend
+        env: default
     spec:
       containers:
       - name: backend
