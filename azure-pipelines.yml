@@ -3,16 +3,12 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
-- "*"
+- main
 
 resources:
 - repo: self
 
-steps:
-- script: |
-    git fetch
-    git checkout $(Build.SourceBranchName)
-    git pull
+
 
 variables:
 
