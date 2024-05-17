@@ -8,6 +8,12 @@ trigger:
 resources:
 - repo: self
 
+steps:
+- script: |
+    git fetch
+    git checkout $(Build.SourceBranchName)
+    git pull
+
 variables:
 
   # Container registry service connection established during pipeline creation
