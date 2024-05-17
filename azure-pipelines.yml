@@ -1,3 +1,7 @@
+# Deploy to Azure Kubernetes Service
+# Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
 trigger:
 - "*"
 
@@ -7,16 +11,12 @@ resources:
 variables:
 
   # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: '8b60f363-8f91-4c94-9a1c-4ed415284548'
+  dockerRegistryServiceConnection: '8ffd9c0f-c0b6-42f6-9e56-1ec7612953e8'
   imageRepository: 'tranhnguyenbego'
   containerRegistry: 'acrforaksanhnt315.azurecr.io'
   dockerfilePath: 'Dockerfile'
   tag: '$(Build.BuildId)'
-  imagePullSecret: 'acrforaksanhnt31518584d84-auth'
-  buildConfiguration: 'Release'
-  releaseBranchName: 'release'
-
-  # Agent VM image name
+  imagePullSecret: 'acrforaksanhnt3151684905a-auth'
 
   # Name of the new namespace being created to deploy the PR changes.
   k8sNamespaceForPR: 'review-app-$(System.PullRequest.PullRequestId)'
@@ -60,7 +60,7 @@ stages:
     displayName: Deploy Dev
     pool:
       pool-local
-    environment: 'Dev'
+    environment: Dev
     strategy:
       runOnce:
         deploy:
@@ -68,6 +68,7 @@ stages:
           - task: KubernetesManifest@0
             displayName: Create imagePullSecret
             inputs:
+              kubernetesServiceConnection: dev
               action: createSecret
               secretName: $(imagePullSecret)
               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
@@ -75,6 +76,7 @@ stages:
           - task: KubernetesManifest@0
             displayName: Deploy to Kubernetes cluster
             inputs:
+              kubernetesServiceConnection: dev
               action: deploy
               manifests: |
                 $(Pipeline.Workspace)/manifests/dev/deployment.yml
@@ -84,131 +86,138 @@ stages:
               containers: |
                 $(containerRegistry)/$(imageRepository):$(tag)
 
-- stage: Test
-  displayName: TEST 
-  dependsOn: Dev
-  #condition: eq(variables['Build.Reason'], 'Schedule')
-  jobs:
-    - deployment: Deploy
-      pool: pool-local
-      environment: test
-      # variables:
-      # - group: 'Release'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-            - task: KubernetesManifest@0
-              displayName: Create imagePullSecret
-              inputs:
-                action: createSecret
-                secretName: $(imagePullSecret)
-                dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+  - deployment: DeployPullRequest
+    displayName: Deploy Pull request
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/pull/'))
+    pool:
+      pool-local
 
-            - task: KubernetesManifest@0
-              displayName: Deploy to Kubernetes cluster
-              inputs:
-                action: deploy
-                manifests: |
-                  $(Pipeline.Workspace)/manifests/test/deployment.yml
-                  $(Pipeline.Workspace)/manifests/test/service.yml
-                imagePullSecrets: |
-                  $(imagePullSecret)
-                containers: |
-                  $(containerRegistry)/$(imageRepository):$(tag)
+    environment: 'tranhnguyen058bego-5942.$(k8sNamespaceForPR)'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - reviewApp: dev
+
+          - task: Kubernetes@1
+            displayName: 'Create a new namespace for the pull request'
+            inputs:
+              command: apply
+              useConfigurationFile: true
+              inline: '{ "kind": "Namespace", "apiVersion": "v1", "metadata": { "name": "$(k8sNamespaceForPR)" }}'
+
+          - task: KubernetesManifest@0
+            displayName: Create imagePullSecret
+            inputs:
+              action: createSecret
+              secretName: $(imagePullSecret)
+              namespace: $(k8sNamespaceForPR)
+              dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+          - task: KubernetesManifest@0
+            displayName: Deploy to the new namespace in the Kubernetes cluster
+            inputs:
+              action: deploy
+              namespace: $(k8sNamespaceForPR)
+              manifests: |
+                $(Pipeline.Workspace)/manifests/dev/deployment.yml
+                $(Pipeline.Workspace)/manifests/dev/service.yml
+              imagePullSecrets: |
+                $(imagePullSecret)
+              containers: |
+                $(containerRegistry)/$(imageRepository):$(tag)
+
+          - task: Kubernetes@1
+            name: get
+            displayName: 'Get services in the new namespace'
+            continueOnError: true
+            inputs:
+              command: get
+              namespace: $(k8sNamespaceForPR)
+              arguments: svc
+              outputFormat: jsonpath='http://{.items[0].status.loadBalancer.ingress[0].ip}:{.items[0].spec.ports[0].port}'
+
+          # Getting the IP of the deployed service and writing it to a variable for posing comment
+          - script: |
+              url="$(get.KubectlOutput)"
+              message="Your review app has been deployed"
+              if [ ! -z "$url" -a "$url" != "http://:" ]
+              then
+                message="${message} and is available at $url.<br><br>[Learn More](https://aka.ms/testwithreviewapps) about how to test and provide feedback for the app."
+              fi
+              echo "##vso[task.setvariable variable=GITHUB_COMMENT]$message"
+
+- stage: Test
+  displayName: Test
+  dependsOn: Dev
+
+  jobs:
+  - deployment: Deploy
+    #condition: eq(variables['Build.Reason'], 'Schedule')
+    displayName: Deploy Test
+    pool:
+      pool-local
+    environment: test
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: KubernetesManifest@0
+            displayName: Create imagePullSecret
+            inputs:
+              kubernetesServiceConnection: test
+              action: createSecret
+              secretName: $(imagePullSecret)
+              dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+          - task: KubernetesManifest@0
+            displayName: Deploy to Kubernetes cluster
+            inputs:
+              kubernetesServiceConnection: test
+              action: deploy
+              manifests: |
+                $(Pipeline.Workspace)/manifests/test/deployment.yml
+                $(Pipeline.Workspace)/manifests/test/service.yml
+              imagePullSecrets: |
+                $(imagePullSecret)
+              containers: |
+                $(containerRegistry)/$(imageRepository):$(tag)
 
 - stage: Staging
-  displayName: Staging
+  displayName: Deloy Staging
   dependsOn: Test
+
   jobs:
-    - deployment: Deploy
-      pool: pool-local
-      environment: staging
-      # variables:
-      # - group: 'Release'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-            - task: KubernetesManifest@0
-              displayName: Create imagePullSecret
-              inputs:
-                action: createSecret
-                secretName: $(imagePullSecret)
-                dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+  - deployment: Deploy
+    #condition: eq(variables['Build.Reason'], 'Schedule')
+    displayName: Deploy Staging
+    pool:
+      pool-local
+    environment: staging
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: KubernetesManifest@0
+            displayName: Create imagePullSecret
+            inputs:
+              kubernetesServiceConnection: staging
+              action: createSecret
+              secretName: $(imagePullSecret)
+              dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-            - task: KubernetesManifest@0
-              displayName: Deploy to Kubernetes cluster
-              inputs:
-                action: deploy
-                manifests: |
-                  $(Pipeline.Workspace)/manifests/staging/deployment.yml
-                  $(Pipeline.Workspace)/manifests/staging/service.yml
-                imagePullSecrets: |
-                  $(imagePullSecret)
-                containers: |
-                  $(containerRegistry)/$(imageRepository):$(tag)
+          - task: KubernetesManifest@0
+            displayName: Deploy to Kubernetes cluster
+            inputs:
+              kubernetesServiceConnection: staging
+              action: deploy
+              manifests: |
+                $(Pipeline.Workspace)/manifests/staging/deployment.yml
+                $(Pipeline.Workspace)/manifests/staging/service.yml
+              imagePullSecrets: |
+                $(imagePullSecret)
+              containers: |
+                $(containerRegistry)/$(imageRepository):$(tag)
 
-        
-    
 
-  # - deployment: DeployPullRequest
-  #   displayName: Deploy Pull request
-  #   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/pull/'))
-  #   pool:
-  #     pool-local
-
-  #   environment: 'tranhnguyen058bego.$(k8sNamespaceForPR)'
-  #   strategy:
-  #     runOnce:
-  #       deploy:
-  #         steps:
-  #         - reviewApp: default
-
-  #         - task: Kubernetes@1
-  #           displayName: 'Create a new namespace for the pull request'
-  #           inputs:
-  #             command: apply
-  #             useConfigurationFile: true
-  #             inline: '{ "kind": "Namespace", "apiVersion": "v1", "metadata": { "name": "$(k8sNamespaceForPR)" }}'
-
-  #         - task: KubernetesManifest@0
-  #           displayName: Create imagePullSecret
-  #           inputs:
-  #             action: createSecret
-  #             secretName: $(imagePullSecret)
-  #             namespace: $(k8sNamespaceForPR)
-  #             dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-  #         - task: KubernetesManifest@0
-  #           displayName: Deploy to the new namespace in the Kubernetes cluster
-  #           inputs:
-  #             action: deploy
-  #             namespace: $(k8sNamespaceForPR)
-  #             manifests: |
-  #               $(Pipeline.Workspace)/manifests/deployment.yml
-  #               $(Pipeline.Workspace)/manifests/service.yml
-  #             imagePullSecrets: |
-  #               $(imagePullSecret)
-  #             containers: |
-  #               $(containerRegistry)/$(imageRepository):$(tag)
-
-  #         - task: Kubernetes@1
-  #           name: get
-  #           displayName: 'Get services in the new namespace'
-  #           continueOnError: true
-  #           inputs:
-  #             command: get
-  #             namespace: $(k8sNamespaceForPR)
-  #             arguments: svc
-  #             outputFormat: jsonpath='http://{.items[0].status.loadBalancer.ingress[0].ip}:{.items[0].spec.ports[0].port}'
-
-  #         # Getting the IP of the deployed service and writing it to a variable for posing comment
-  #         - script: |
-  #             url="$(get.KubectlOutput)"
-  #             message="Your review app has been deployed"
-  #             if [ ! -z "$url" -a "$url" != "http://:" ]
-  #             then
-  #               message="${message} and is available at $url.<br><br>[Learn More](https://aka.ms/testwithreviewapps) about how to test and provide feedback for the app."
-  #             fi
-  #             echo "##vso[task.setvariable variable=GITHUB_COMMENT]$message"
+  
