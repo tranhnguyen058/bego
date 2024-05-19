@@ -191,7 +191,6 @@ stages:
 
   jobs:
   - deployment: Deploy
-    #condition: eq(variables['Build.Reason'], 'Schedule')
     displayName: Deploy Staging
     pool:
       pool-local
